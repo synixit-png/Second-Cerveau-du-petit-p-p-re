@@ -64,9 +64,14 @@ Deux canaux, aucun ne demande de toucher au code :
    existe déjà). Une note peut aussi porter un lien externe et une image
    ou un fichier joint (upload direct sur la page, max ~4 Mo côté
    navigateur) : le script les décode et les écrit dans `docs/files/`
-   automatiquement. Relis les notes créées, ajuste `group`/`links`/le
-   corps si besoin (le script se contente de convertir tel quel), puis
-   régénère le graphe comme d'habitude.
+   automatiquement. Le bouton "Supprimer" existe aussi sur les notes
+   officielles (pas seulement les brouillons) : ça les masque tout de
+   suite sur l'appareil de la personne, et l'id supprimé se retrouve dans
+   `deleted` de l'export — `import_drafts.py` supprime alors le fichier
+   `wiki/<id>.md` correspondant pour de bon. Relis les notes créées et
+   vérifie qu'aucune autre note ne référence encore un id supprimé dans
+   son `links` (le script t'avertit via `generate_graph.py` si c'est le
+   cas), puis régénère le graphe comme d'habitude.
 
 2. **Issue GitHub** (`.github/ISSUE_TEMPLATE/nouvelle-note.yml`, formulaire
    sujet/matière/lien/description) — plus adapté à toi qu'à quelqu'un qui ne
