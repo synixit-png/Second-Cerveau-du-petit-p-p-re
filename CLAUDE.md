@@ -38,22 +38,42 @@ Quand on te demande de traiter des notes de `raw/` :
 Ne crée pas de note dans `wiki/` uniquement pour "compléter" le graphe :
 chaque note doit correspondre à un vrai concept qu'on veut pouvoir retrouver.
 
-## Soumission par un tiers (bouton "Proposer une note")
+## Soumission par un tiers
 
-La page `docs/index.html` a un bouton qui ouvre une issue GitHub pré-remplie
-(`.github/ISSUE_TEMPLATE/nouvelle-note.yml`) — sujet, matière, lien optionnel,
-description. Pas de compte GitHub pour toi requis en dehors de ça : n'importe
-qui peut proposer une note sans toucher au code.
+Deux canaux, aucun ne demande de toucher au code :
 
-Quand on te demande de traiter les issues en attente (label `nouvelle-note`) :
-traite chaque issue comme une entrée de `raw/` (voir workflow ci-dessus),
-crée la ou les notes `wiki/*.md` correspondantes, régénère le graphe, puis
-ferme l'issue avec un commentaire pointant vers la note créée.
+1. **Bouton "✏️ Ajouter une bulle" sur la page** (le principal, pas de compte
+   requis). En mode ajout, cliquer sur une bulle existante ouvre un
+   formulaire pour créer une sous-bulle reliée ; cliquer dans le vide crée
+   une bulle libre. Ces ajouts sont stockés uniquement dans le
+   `localStorage` du navigateur de la personne (clé `secondCerveau.drafts`)
+   — ils ne sont jamais envoyés nulle part automatiquement, et ne
+   sont visibles que sur son propre appareil. Un bouton "⬇️ Exporter"
+   télécharge ces brouillons en JSON (`mes-notes.json`) pour qu'elle te les
+   transmette par le moyen de son choix (message, email...).
+
+   Quand on te donne un fichier `mes-notes.json` exporté ainsi :
+
+   ```
+   python3 scripts/import_drafts.py chemin/vers/mes-notes.json
+   ```
+
+   crée les fichiers `wiki/*.md` correspondants (ignore ceux dont l'id
+   existe déjà). Relis-les, ajuste `group`/`links`/le corps si besoin
+   (le script se contente de convertir tel quel), puis régénère le graphe
+   comme d'habitude.
+
+2. **Issue GitHub** (`.github/ISSUE_TEMPLATE/nouvelle-note.yml`, formulaire
+   sujet/matière/lien/description) — plus adapté à toi qu'à quelqu'un qui ne
+   veut pas de compte GitHub. Traite chaque issue comme une entrée de
+   `raw/` (voir workflow ci-dessus), crée la ou les notes correspondantes,
+   régénère le graphe, ferme l'issue avec un commentaire pointant vers la
+   note créée.
 
 Il n'y a pas de chat intégré à la page : c'est un site statique GitHub Pages,
 donc aucune conversation avec Claude n'y est possible sans exposer une clé
 API côté client ou héberger un backend — hors de portée de ce projet en
-l'état. Le bouton "Proposer une note" est le canal de contribution.
+l'état.
 
 ## Publication
 
