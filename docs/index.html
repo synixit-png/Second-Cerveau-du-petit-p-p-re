@@ -14,6 +14,7 @@
 }
 :root[data-theme="light"]{ --space:#050814; }
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--space);color:var(--ink);
   font-family:"Atkinson Hyperlegible",system-ui,sans-serif}
 body{
@@ -98,7 +99,7 @@ h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:cl
 <nav class="legend" id="legend" aria-label="Filtrer par matière"></nav>
 
 <div class="draftbar" id="draftBar" hidden>
-  <span class="tag">📝 <span id="draftCount">0</span> brouillon(s)</span>
+  <span class="tag">📝 <span id="draftCount">0</span> modification(s) locale(s)</span>
   <button class="btn ghost" id="exportDrafts">⬇️ Exporter</button>
   <button class="btn ghost" id="clearDrafts">🗑️ Effacer</button>
 </div>
@@ -218,18 +219,22 @@ fetch("graph.json")
 function init(data){
   document.getElementById("loading").remove();
 
-  const byId = {};
-  const nodes = data.nodes.map(n => (byId[n.id] = {...n, deg:0}));
-  const links = data.links;
-
-  // ---------- Brouillons : bulles ajoutées localement, jamais envoyées nulle part ----------
+  // ---------- Brouillons : bulles ajoutées/supprimées localement, jamais envoyées nulle part ----------
   const DRAFT_KEY = "secondCerveau.drafts";
   function loadDrafts(){
-    try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY)); return (d && d.nodes && d.links) ? d : {nodes:[], links:[]}; }
-    catch { return {nodes:[], links:[]}; }
+    try {
+      const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
+      return (d && d.nodes && d.links) ? {nodes:d.nodes, links:d.links, deleted:d.deleted||[]} : {nodes:[], links:[], deleted:[]};
+    } catch { return {nodes:[], links:[], deleted:[]}; }
   }
   function saveDrafts(){ try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch {} }
   const drafts = loadDrafts();
+  const deletedSet = new Set(drafts.deleted);
+
+  const byId = {};
+  const nodes = data.nodes.filter(n => !deletedSet.has(n.id)).map(n => (byId[n.id] = {...n, deg:0}));
+  const links = data.links.filter(l => !deletedSet.has(l.source) && !deletedSet.has(l.target));
+
   drafts.nodes.forEach(n => { if(!byId[n.id]){ byId[n.id] = {...n, deg:0, draft:true}; nodes.push(byId[n.id]); } });
   drafts.links.forEach(l => links.push({...l}));
 
@@ -360,10 +365,12 @@ function init(data){
     if(n.draft){
       const editBtn = document.createElement("button"); editBtn.textContent = "✏️ Modifier";
       editBtn.onclick = () => openEditForm(id);
-      const delBtn = document.createElement("button"); delBtn.textContent = "🗑️ Supprimer";
-      delBtn.style.borderColor = "#FF6F9188"; delBtn.onclick = () => deleteDraft(id);
-      actions.append(editBtn, delBtn);
+      actions.appendChild(editBtn);
     }
+    const delBtn = document.createElement("button"); delBtn.textContent = "🗑️ Supprimer";
+    delBtn.style.borderColor = "#FF6F9188";
+    delBtn.onclick = () => n.draft ? deleteDraft(id) : deleteOfficial(id);
+    actions.appendChild(delBtn);
     actions.hidden = false;
     panel.classList.add("open");
     const r = 1 + 90/Math.hypot(n.x||1, n.y||1, n.z||1);
@@ -394,8 +401,9 @@ function init(data){
   function uniqueId(base){ let id = base, i = 2; while(byId[id]) id = `${base}-${i++}`; return id; }
 
   function refreshDraftUI(){
-    document.getElementById("draftCount").textContent = drafts.nodes.length;
-    document.getElementById("draftBar").hidden = drafts.nodes.length === 0;
+    const count = drafts.nodes.length + drafts.deleted.length;
+    document.getElementById("draftCount").textContent = count;
+    document.getElementById("draftBar").hidden = count === 0;
   }
   refreshDraftUI();
 
@@ -510,6 +518,22 @@ function init(data){
     closeNote();
   }
 
+  function deleteOfficial(id){
+    const n = byId[id];
+    if(!confirm(`Supprimer la bulle "${n.title}" ?\n\nLe site est figé (GitHub Pages) : ça la fait disparaître tout de suite, mais seulement sur cet appareil. Pour que ça disparaisse pour tout le monde, clique "Exporter" et envoie le fichier comme d'habitude.`)) return;
+    delete byId[id];
+    const ni = nodes.findIndex(x => x.id === id); if(ni >= 0) nodes.splice(ni, 1);
+    for(let i = links.length - 1; i >= 0; i--){
+      if(sid(links[i].source) === id || sid(links[i].target) === id) links.splice(i, 1);
+    }
+    if(!drafts.deleted.includes(id)) drafts.deleted.push(id);
+    saveDrafts();
+    Graph.graphData({nodes, links});
+    refreshDraftUI();
+    refreshTitles();
+    closeNote();
+  }
+
   function resolveAttachment(existing){
     if(pendingImage) return { image: pendingImage, file: null };
     if(pendingFile) return { image: null, file: pendingFile };
@@ -571,8 +595,8 @@ function init(data){
     URL.revokeObjectURL(a.href);
   };
   document.getElementById("clearDrafts").onclick = () => {
-    if(!confirm("Effacer tes brouillons locaux ? Fais d'abord \"Exporter\" si tu ne veux pas les perdre.")) return;
-    drafts.nodes = []; drafts.links = [];
+    if(!confirm("Effacer tes brouillons et rétablir les bulles supprimées localement ? Fais d'abord \"Exporter\" si tu ne veux pas les perdre.")) return;
+    drafts.nodes = []; drafts.links = []; drafts.deleted = [];
     saveDrafts();
     location.reload();
   };

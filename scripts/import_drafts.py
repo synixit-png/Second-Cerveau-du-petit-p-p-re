@@ -6,6 +6,10 @@ Les images et fichiers joints (envoyés en base64 dans l'export) sont
 décodés et écrits dans docs/files/, puisque seul le dossier docs/ est
 publié par GitHub Pages.
 
+Les notes officielles supprimées depuis le site (bouton "Supprimer" sur une
+bulle qui n'est pas un brouillon) apparaissent dans data["deleted"] : leur
+fichier wiki/<id>.md est alors supprimé pour de bon.
+
 Usage : python3 scripts/import_drafts.py chemin/vers/mes-notes.json
 """
 import base64
@@ -85,8 +89,20 @@ def main() -> None:
         created.append(note_id)
         print(f"Créé : wiki/{note_id}.md")
 
-    if created:
-        print(f"\n{len(created)} note(s) importée(s). Relis-les, ajuste group/links/body si besoin, puis :")
+    removed = []
+    for note_id in data.get("deleted", []):
+        path = WIKI_DIR / f"{note_id}.md"
+        if not path.exists():
+            print(f"Ignoré (wiki/{note_id}.md n'existe déjà plus) : {note_id}")
+            continue
+        path.unlink()
+        removed.append(note_id)
+        print(f"Supprimé : wiki/{note_id}.md")
+
+    if created or removed:
+        print(f"\n{len(created)} note(s) importée(s), {len(removed)} supprimée(s).")
+        print("Relis les notes créées, vérifie qu'aucune autre note ne référence encore")
+        print("les id supprimés dans son champ links, puis :")
         print("  python3 scripts/generate_graph.py")
     else:
         print("Rien à importer.")
