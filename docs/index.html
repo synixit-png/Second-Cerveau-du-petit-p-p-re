@@ -137,6 +137,7 @@ function init(data){
   const links = data.links;
   links.forEach(l => { byId[l.source].deg++; byId[l.target].deg++; });
   const sid = x => typeof x === "object" ? x.id : x;
+  const resolve = x => typeof x === "object" ? x : byId[x];
   const neighbors = id => links.filter(l => sid(l.source)===id || sid(l.target)===id)
     .map(l => sid(l.source)===id ? sid(l.target) : sid(l.source));
 
@@ -157,14 +158,16 @@ function init(data){
       return GROUPS[n.group].color;
     })
     .nodeVisibility(n => !hidden.has(n.group))
-    .linkVisibility(l => !hidden.has(l.source.group) && !hidden.has(l.target.group))
-    .linkColor(l => hoverSet.size && hoverSet.has(l.source.id) && hoverSet.has(l.target.id) && (l.source.id===focus||l.target.id===focus) ? "#ffffff" : "#6f78b0")
+    .linkVisibility(l => !hidden.has(resolve(l.source).group) && !hidden.has(resolve(l.target).group))
+    .linkColor(l => { const s = resolve(l.source).id, t = resolve(l.target).id;
+      return hoverSet.size && hoverSet.has(s) && hoverSet.has(t) && (s===focus||t===focus) ? "#ffffff" : "#6f78b0"; })
     .linkOpacity(.35)
-    .linkWidth(l => focus && (l.source.id===focus||l.target.id===focus) ? 1.4 : .4)
+    .linkWidth(l => { const s = resolve(l.source).id, t = resolve(l.target).id;
+      return focus && (s===focus||t===focus) ? 1.4 : .4; })
     .linkDirectionalParticles(2)
     .linkDirectionalParticleWidth(1.3)
     .linkDirectionalParticleSpeed(.004)
-    .linkDirectionalParticleColor(l => GROUPS[l.source.group].color)
+    .linkDirectionalParticleColor(l => GROUPS[resolve(l.source).group].color)
     .onNodeHover(n => { el.style.cursor = n ? "pointer" : ""; if(!focus) highlight(n ? n.id : null); })
     .onNodeClick(n => { stopTour(); openNote(n.id); })
     .onBackgroundClick(() => { stopTour(); closeNote(); });
