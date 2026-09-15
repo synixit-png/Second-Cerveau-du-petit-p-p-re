@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Second cerveau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --space:#050814; --ink:#E8ECFF; --muted:#8C93B8; --glass:rgba(16,22,48,.72); --line:rgba(140,150,210,.22);
+  --maths:#7AA2FF; --expert:#B98CFF; --ses:#FFB35C; --orient:#5CE1B8; --methode:#FF6F91;
+}
+:root[data-theme="light"]{ --space:#050814; }
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--space);color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,sans-serif}
+body{
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(122,162,255,.14), transparent 55%),
+    radial-gradient(ellipse at 80% 70%, rgba(185,140,255,.12), transparent 50%),
+    var(--space);
+}
+#stars{position:fixed;inset:0;z-index:0}
+#graph{position:fixed;inset:0;z-index:1}
+h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:clamp(1.3rem,3.2vw,2.2rem);
+  letter-spacing:-.02em;margin:0;line-height:1.05}
+.top{position:fixed;top:20px;left:24px;z-index:3;max-width:min(420px,80vw);pointer-events:none}
+.top p{margin:.5rem 0 0;color:var(--muted);font-size:.95rem}
+.search{pointer-events:auto;margin-top:14px;width:100%;padding:10px 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--glass);color:var(--ink);font:inherit;backdrop-filter:blur(8px)}
+.search:focus{outline:2px solid var(--maths);outline-offset:2px}
+.legend{position:fixed;left:24px;bottom:22px;z-index:3;display:flex;flex-wrap:wrap;gap:8px;max-width:calc(100vw - 48px)}
+.chip{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--glass);color:var(--ink);font:inherit;font-size:.88rem;cursor:pointer;backdrop-filter:blur(8px)}
+.chip i{width:10px;height:10px;border-radius:50%;box-shadow:0 0 10px currentColor}
+.chip[aria-pressed="false"]{opacity:.38}
+.chip:focus-visible,.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.controls{position:fixed;right:24px;bottom:22px;z-index:3;display:flex;gap:8px}
+.btn{padding:11px 18px;border-radius:999px;border:0;font:inherit;font-weight:700;cursor:pointer;
+  background:var(--ink);color:var(--space)}
+.btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--line)}
+.panel{position:fixed;top:20px;right:20px;z-index:4;width:min(360px,calc(100vw - 40px));max-height:calc(100vh - 110px);
+  overflow:auto;padding:22px 22px 18px;border-radius:22px;background:var(--glass);border:1px solid var(--line);
+  backdrop-filter:blur(14px);transform:translateX(calc(100% + 40px));transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.panel.open{transform:none}
+.panel .tag{display:inline-block;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid currentColor}
+.panel h2{font-family:"Unbounded",sans-serif;font-weight:600;font-size:1.25rem;margin:.7rem 0 .5rem;line-height:1.2}
+.panel .body{line-height:1.55;color:#CDD3F0}
+.panel .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.panel .links button{font:inherit;font-size:.85rem;padding:5px 10px;border-radius:999px;background:transparent;
+  color:var(--ink);border:1px solid var(--line);cursor:pointer}
+.panel .links button:hover{border-color:var(--ink)}
+.close{position:absolute;top:12px;right:14px;background:none;border:0;color:var(--muted);font-size:1.4rem;cursor:pointer}
+.progress{height:2px;background:var(--line);border-radius:2px;margin-top:16px;overflow:hidden}
+.progress span{display:block;height:100%;width:0;background:var(--ink)}
+.loading{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:.95rem;pointer-events:none}
+@media (max-width:640px){
+  .controls{bottom:auto;top:20px;right:16px}
+  .top{top:70px;left:16px}
+  .legend{left:16px;bottom:16px}
+  .panel{top:auto;bottom:70px;right:10px;max-height:50vh}
+}
+@media (prefers-reduced-motion:reduce){ .panel{transition:none} }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div id="graph" aria-label="Graphe 3D des notes"></div>
+<div class="loading" id="loading">Chargement du graphe…</div>
+
+<header class="top">
+  <h1>Second cerveau</h1>
+  <p>Chaque étoile est une note. Clique pour l'ouvrir, glisse pour tourner autour.</p>
+  <input class="search" id="search" type="search" placeholder="Chercher une note…" list="titles" aria-label="Chercher une note">
+  <datalist id="titles"></datalist>
+</header>
+
+<nav class="legend" id="legend" aria-label="Filtrer par matière"></nav>
+
+<div class="controls">
+  <button class="btn ghost" id="spin" aria-pressed="true">Pause rotation</button>
+  <button class="btn" id="tour">Lancer le voyage</button>
+</div>
+
+<aside class="panel" id="panel" aria-live="polite">
+  <button class="close" id="close" aria-label="Fermer la note">×</button>
+  <span class="tag" id="ptag"></span>
+  <h2 id="ptitle"></h2>
+  <div class="body" id="pbody"></div>
+  <div class="links" id="plinks"></div>
+  <div class="progress" id="pprog" hidden><span></span></div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.3/dist/3d-force-graph.min.js"></script>
+<script>
+// ---------- Groupes / couleurs (métadonnées d'affichage, pas de contenu) ----------
+const GROUPS = {
+  maths:   {label:"Maths",        color:"#7AA2FF"},
+  expert:  {label:"Maths expert", color:"#B98CFF"},
+  ses:     {label:"SES",          color:"#FFB35C"},
+  orient:  {label:"Orientation",  color:"#5CE1B8"},
+  methode: {label:"Méthodes",     color:"#FF6F91"}
+};
+
+// ---------- Étoiles de fond ----------
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sc = document.getElementById("stars"), sx = sc.getContext("2d");
+let stars = [];
+function sizeStars(){
+  sc.width = innerWidth*devicePixelRatio; sc.height = innerHeight*devicePixelRatio;
+  stars = Array.from({length:260},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.3*devicePixelRatio,p:Math.random()*6}));
+}
+function drawStars(t){
+  sx.clearRect(0,0,sc.width,sc.height);
+  for(const s of stars){ sx.globalAlpha = .35 + .35*Math.sin(t/900 + s.p); sx.beginPath(); sx.arc(s.x,s.y,s.r,0,7); sx.fillStyle="#fff"; sx.fill(); }
+  if(!reduce) requestAnimationFrame(drawStars);
+}
+sizeStars(); requestAnimationFrame(drawStars); addEventListener("resize", sizeStars);
+
+// ---------- Chargement du graphe (généré depuis wiki/ par scripts/generate_graph.py) ----------
+fetch("graph.json")
+  .then(r => { if(!r.ok) throw new Error(`graph.json: HTTP ${r.status}`); return r.json(); })
+  .then(init)
+  .catch(err => {
+    document.getElementById("loading").textContent = "Impossible de charger graph.json : " + err.message;
+  });
+
+function init(data){
+  document.getElementById("loading").remove();
+
+  const byId = {};
+  const nodes = data.nodes.map(n => (byId[n.id] = {...n, deg:0}));
+  const links = data.links;
+  links.forEach(l => { byId[l.source].deg++; byId[l.target].deg++; });
+  const sid = x => typeof x === "object" ? x.id : x;
+  const neighbors = id => links.filter(l => sid(l.source)===id || sid(l.target)===id)
+    .map(l => sid(l.source)===id ? sid(l.target) : sid(l.source));
+
+  // ---------- Graphe 3D ----------
+  const hidden = new Set();
+  let focus = null, hoverSet = new Set();
+  const el = document.getElementById("graph");
+  const Graph = ForceGraph3D()(el)
+    .backgroundColor("rgba(0,0,0,0)")
+    .graphData({nodes, links})
+    .nodeLabel(n => `<b>${n.title}</b>`)
+    .nodeVal(n => 2 + n.deg*1.6)
+    .nodeResolution(20)
+    .nodeOpacity(.95)
+    .nodeColor(n => {
+      if(hidden.has(n.group)) return "rgba(0,0,0,0)";
+      if(hoverSet.size && !hoverSet.has(n.id)) return "#39405e";
+      return GROUPS[n.group].color;
+    })
+    .nodeVisibility(n => !hidden.has(n.group))
+    .linkVisibility(l => !hidden.has(l.source.group) && !hidden.has(l.target.group))
+    .linkColor(l => hoverSet.size && hoverSet.has(l.source.id) && hoverSet.has(l.target.id) && (l.source.id===focus||l.target.id===focus) ? "#ffffff" : "#6f78b0")
+    .linkOpacity(.35)
+    .linkWidth(l => focus && (l.source.id===focus||l.target.id===focus) ? 1.4 : .4)
+    .linkDirectionalParticles(2)
+    .linkDirectionalParticleWidth(1.3)
+    .linkDirectionalParticleSpeed(.004)
+    .linkDirectionalParticleColor(l => GROUPS[l.source.group].color)
+    .onNodeHover(n => { el.style.cursor = n ? "pointer" : ""; if(!focus) highlight(n ? n.id : null); })
+    .onNodeClick(n => { stopTour(); openNote(n.id); })
+    .onBackgroundClick(() => { stopTour(); closeNote(); });
+
+  Graph.d3Force("charge").strength(-90);
+  Graph.cameraPosition({z: 320});
+
+  function highlight(id){
+    hoverSet = id ? new Set([id, ...neighbors(id)]) : new Set();
+    Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()).linkWidth(Graph.linkWidth());
+  }
+
+  // Rotation automatique
+  let spinning = !reduce, angle = 0, dist = 320, holdUntil = reduce ? 0 : performance.now() + 2900;
+  const spinBtn = document.getElementById("spin");
+  function syncSpin(){ spinBtn.textContent = spinning ? "Pause rotation" : "Reprendre la rotation"; spinBtn.setAttribute("aria-pressed", spinning); }
+  syncSpin();
+  spinBtn.onclick = () => { spinning = !spinning; if(spinning){ const p = Graph.cameraPosition(); dist = Math.hypot(p.x,p.z)||320; angle = Math.atan2(p.x,p.z); } syncSpin(); };
+  setInterval(() => {
+    if(!spinning || focus || performance.now() < holdUntil) return;
+    angle += 0.0025;
+    Graph.cameraPosition({x: dist*Math.sin(angle), z: dist*Math.cos(angle)});
+  }, 16);
+
+  // ---------- Panneau de note ----------
+  const panel = document.getElementById("panel");
+  function openNote(id){
+    const n = byId[id]; focus = id; highlight(id);
+    const g = GROUPS[n.group];
+    const tag = document.getElementById("ptag"); tag.textContent = g.label; tag.style.color = g.color;
+    document.getElementById("ptitle").textContent = n.title;
+    document.getElementById("pbody").textContent = n.body;
+    const box = document.getElementById("plinks"); box.innerHTML = "";
+    neighbors(id).forEach(nid => {
+      const b = document.createElement("button");
+      b.textContent = byId[nid].title; b.style.borderColor = GROUPS[byId[nid].group].color + "88";
+      b.onclick = () => { stopTour(); openNote(nid); };
+      box.appendChild(b);
+    });
+    panel.classList.add("open");
+    const r = 1 + 90/Math.hypot(n.x||1, n.y||1, n.z||1);
+    Graph.cameraPosition({x:(n.x||0)*r, y:(n.y||0)*r, z:(n.z||0)*r}, n, reduce ? 0 : 1600);
+  }
+  function closeNote(){
+    focus = null; highlight(null); panel.classList.remove("open");
+    const p = Graph.cameraPosition(); dist = 320; angle = Math.atan2(p.x,p.z);
+    holdUntil = performance.now() + (reduce ? 0 : 1300);
+    Graph.cameraPosition({x: dist*Math.sin(angle), y: 0, z: dist*Math.cos(angle)}, {x:0,y:0,z:0}, reduce ? 0 : 1200);
+  }
+  document.getElementById("close").onclick = () => { stopTour(); closeNote(); };
+  addEventListener("keydown", e => { if(e.key === "Escape"){ stopTour(); closeNote(); } });
+
+  // ---------- Voyage : les notes défilent une à une ----------
+  const tourBtn = document.getElementById("tour"), prog = document.getElementById("pprog");
+  let tourTimer = null, tourOrder = [], tourIdx = 0;
+  const STEP = 4200;
+  function nextStop(){
+    const visible = tourOrder.filter(id => !hidden.has(byId[id].group));
+    if(!visible.length) return stopTour();
+    const id = visible[tourIdx++ % visible.length];
+    openNote(id);
+    prog.hidden = false;
+    const bar = prog.firstElementChild;
+    bar.style.transition = "none"; bar.style.width = "0";
+    requestAnimationFrame(() => { bar.style.transition = `width ${STEP}ms linear`; bar.style.width = "100%"; });
+  }
+  function startTour(){
+    const start = byId["accueil"] ? "accueil" : nodes[0].id;
+    const order = [], stack = [start], vis = new Set();
+    while(stack.length){ const id = stack.pop(); if(vis.has(id)) continue; vis.add(id); order.push(id); neighbors(id).reverse().forEach(n => stack.push(n)); }
+    tourOrder = order; tourIdx = 0;
+    tourBtn.textContent = "Arrêter le voyage";
+    nextStop(); tourTimer = setInterval(nextStop, STEP);
+  }
+  function stopTour(){
+    if(!tourTimer) return;
+    clearInterval(tourTimer); tourTimer = null; prog.hidden = true;
+    tourBtn.textContent = "Lancer le voyage";
+  }
+  tourBtn.onclick = () => tourTimer ? (stopTour(), closeNote()) : startTour();
+
+  // ---------- Légende / filtres ----------
+  const legend = document.getElementById("legend");
+  Object.entries(GROUPS).forEach(([k,g]) => {
+    const c = document.createElement("button");
+    c.className = "chip"; c.setAttribute("aria-pressed","true");
+    c.innerHTML = `<i style="background:${g.color};color:${g.color}"></i>${g.label}`;
+    c.onclick = () => {
+      hidden.has(k) ? hidden.delete(k) : hidden.add(k);
+      c.setAttribute("aria-pressed", !hidden.has(k));
+      Graph.nodeVisibility(Graph.nodeVisibility()).linkVisibility(Graph.linkVisibility());
+    };
+    legend.appendChild(c);
+  });
+
+  // ---------- Recherche ----------
+  const dl = document.getElementById("titles");
+  nodes.forEach(n => { const o = document.createElement("option"); o.value = n.title; dl.appendChild(o); });
+  document.getElementById("search").addEventListener("change", e => {
+    const q = e.target.value.trim().toLowerCase();
+    const n = nodes.find(n => n.title.toLowerCase() === q) || nodes.find(n => n.title.toLowerCase().includes(q));
+    if(n){ stopTour(); openNote(n.id); }
+  });
+
+  // Petite ouverture : on arrive de loin
+  if(!reduce){ Graph.cameraPosition({z: 900}); setTimeout(() => Graph.cameraPosition({z: 320}, {x:0,y:0,z:0}, 2500), 300); }
+}
+</script>
+</body>
+</html>

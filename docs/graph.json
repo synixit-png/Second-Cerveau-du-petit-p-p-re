@@ -1,0 +1,526 @@
+{
+  "nodes": [
+    {
+      "id": "accueil",
+      "title": "Mon second cerveau",
+      "group": "methode",
+      "body": "La page d'entrée. Tout part d'ici : matières, méthodes, projets d'après-bac."
+    },
+    {
+      "id": "arithmetique",
+      "title": "Arithmétique",
+      "group": "expert",
+      "body": "Divisibilité, PGCD, Bézout, Gauss, nombres premiers."
+    },
+    {
+      "id": "bac",
+      "title": "Plan de révision du bac",
+      "group": "methode",
+      "body": "Épreuves de spécialité, grand oral, planning semaine par semaine."
+    },
+    {
+      "id": "chomage",
+      "title": "Chômage",
+      "group": "ses",
+      "body": "Types de chômage, politiques de l'emploi."
+    },
+    {
+      "id": "commerce",
+      "title": "Commerce international",
+      "group": "ses",
+      "body": "Avantages comparatifs, protectionnisme, mondialisation."
+    },
+    {
+      "id": "complexes",
+      "title": "Nombres complexes",
+      "group": "expert",
+      "body": "Forme algébrique, trigonométrique, exponentielle. Géométrie du plan en un seul nombre."
+    },
+    {
+      "id": "congruences",
+      "title": "Congruences",
+      "group": "expert",
+      "body": "Calcul modulo n, petit théorème de Fermat."
+    },
+    {
+      "id": "continuite",
+      "title": "Continuité et TVI",
+      "group": "maths",
+      "body": "Théorème des valeurs intermédiaires, algorithme de dichotomie."
+    },
+    {
+      "id": "convexite",
+      "title": "Convexité",
+      "group": "maths",
+      "body": "Signe de la dérivée seconde, points d'inflexion, position par rapport aux tangentes."
+    },
+    {
+      "id": "croissance",
+      "title": "Croissance économique",
+      "group": "ses",
+      "body": "Sources de la croissance, progrès technique, limites écologiques."
+    },
+    {
+      "id": "crypto",
+      "title": "Chiffrement (RSA)",
+      "group": "expert",
+      "body": "Application de l'arithmétique : comment ton téléphone garde tes messages secrets."
+    },
+    {
+      "id": "denombrement",
+      "title": "Dénombrement",
+      "group": "maths",
+      "body": "Permutations, combinaisons, coefficients binomiaux."
+    },
+    {
+      "id": "derivation",
+      "title": "Dérivation",
+      "group": "maths",
+      "body": "Dérivée d'une composée, tangente, sens de variation."
+    },
+    {
+      "id": "ecoles",
+      "title": "Écoles d'ingé et de commerce",
+      "group": "orient",
+      "body": "Post-bac ou après prépa. Comparer les débouchés avant de choisir."
+    },
+    {
+      "id": "environnement",
+      "title": "Action publique et environnement",
+      "group": "ses",
+      "body": "Taxe carbone, marché de quotas, réglementation."
+    },
+    {
+      "id": "exp",
+      "title": "Fonction exponentielle",
+      "group": "maths",
+      "body": "exp' = exp, propriétés algébriques, modèles de croissance."
+    },
+    {
+      "id": "feynman",
+      "title": "Technique Feynman",
+      "group": "methode",
+      "body": "Expliquer une notion comme à un enfant de 10 ans. Là où ça coince, c'est ce qu'il faut revoir."
+    },
+    {
+      "id": "fonctions",
+      "title": "Étude de fonctions",
+      "group": "maths",
+      "body": "Dérivée, variations, convexité, tableau de variations."
+    },
+    {
+      "id": "geometrie",
+      "title": "Géométrie dans l'espace",
+      "group": "maths",
+      "body": "Vecteurs, droites et plans, produit scalaire, orthogonalité."
+    },
+    {
+      "id": "grandoral",
+      "title": "Grand oral",
+      "group": "methode",
+      "body": "Une question qui relie maths et SES : par exemple, les maths des inégalités."
+    },
+    {
+      "id": "graphes",
+      "title": "Graphes",
+      "group": "expert",
+      "body": "Sommets, arêtes, matrice d'adjacence. Ce second cerveau est lui-même un graphe."
+    },
+    {
+      "id": "inegalites",
+      "title": "Inégalités et justice sociale",
+      "group": "ses",
+      "body": "Courbe de Lorenz, coefficient de Gini, redistribution."
+    },
+    {
+      "id": "integrales",
+      "title": "Calcul intégral",
+      "group": "maths",
+      "body": "Primitives, aire sous la courbe, intégration par parties."
+    },
+    {
+      "id": "interets",
+      "title": "Intérêts composés",
+      "group": "ses",
+      "body": "Une suite géométrique déguisée. Pourquoi épargner tôt change tout."
+    },
+    {
+      "id": "licence",
+      "title": "Licence maths-éco (MIASHS)",
+      "group": "orient",
+      "body": "La fac qui combine maths, économie et informatique."
+    },
+    {
+      "id": "limites",
+      "title": "Limites de fonctions",
+      "group": "maths",
+      "body": "Formes indéterminées, croissances comparées, asymptotes."
+    },
+    {
+      "id": "ln",
+      "title": "Logarithme népérien",
+      "group": "maths",
+      "body": "Réciproque de exp. Transforme les produits en sommes."
+    },
+    {
+      "id": "marche",
+      "title": "Marchés et concurrence",
+      "group": "ses",
+      "body": "Offre, demande, prix d'équilibre, pouvoir de marché."
+    },
+    {
+      "id": "marginal",
+      "title": "Raisonnement marginal",
+      "group": "ses",
+      "body": "Coût marginal, recette marginale : la dérivée appliquée à l'économie."
+    },
+    {
+      "id": "markov",
+      "title": "Chaînes de Markov",
+      "group": "expert",
+      "body": "Matrice de transition, état stable. Utilisé en économie et par les moteurs de recherche."
+    },
+    {
+      "id": "matrices",
+      "title": "Matrices",
+      "group": "expert",
+      "body": "Opérations, inverse, puissances de matrices."
+    },
+    {
+      "id": "mobilite",
+      "title": "Mobilité sociale",
+      "group": "ses",
+      "body": "Tables de mobilité, reproduction sociale, rôle de l'école."
+    },
+    {
+      "id": "parcoursup",
+      "title": "Parcoursup",
+      "group": "orient",
+      "body": "Calendrier, vœux, lettres de motivation. Rien n'est encore décidé, et c'est normal."
+    },
+    {
+      "id": "pib",
+      "title": "PIB et ses limites",
+      "group": "ses",
+      "body": "Mesurer la richesse, ce que le PIB ne mesure pas."
+    },
+    {
+      "id": "polynomes",
+      "title": "Polynômes",
+      "group": "expert",
+      "body": "Racines, factorisation, équations dans C."
+    },
+    {
+      "id": "prepa",
+      "title": "Prépa (MPSI, ECG)",
+      "group": "orient",
+      "body": "ECG = maths + économie : le mélange exact de ses spécialités."
+    },
+    {
+      "id": "probas",
+      "title": "Probabilités",
+      "group": "maths",
+      "body": "Loi binomiale, variables aléatoires, espérance, loi des grands nombres."
+    },
+    {
+      "id": "python",
+      "title": "Algorithmique en Python",
+      "group": "methode",
+      "body": "Boucles, listes, fonctions. Pour tester ses intuitions de maths en quelques lignes."
+    },
+    {
+      "id": "recurrence",
+      "title": "Raisonnement par récurrence",
+      "group": "maths",
+      "body": "Initialisation, hérédité, conclusion. Le domino qui fait tomber tous les autres."
+    },
+    {
+      "id": "repetition",
+      "title": "Répétition espacée",
+      "group": "methode",
+      "body": "Revoir une notion à J+1, J+3, J+7, J+21. La mémoire tient bien mieux."
+    },
+    {
+      "id": "sondages",
+      "title": "Enquêtes et statistiques",
+      "group": "ses",
+      "body": "Échantillon, intervalle de fluctuation, corrélation vs causalité."
+    },
+    {
+      "id": "suites",
+      "title": "Suites numériques",
+      "group": "maths",
+      "body": "Suites arithmétiques et géométriques, limites, convergence. Base de presque tout le programme d'analyse."
+    }
+  ],
+  "links": [
+    {
+      "source": "accueil",
+      "target": "suites"
+    },
+    {
+      "source": "accueil",
+      "target": "fonctions"
+    },
+    {
+      "source": "accueil",
+      "target": "complexes"
+    },
+    {
+      "source": "accueil",
+      "target": "croissance"
+    },
+    {
+      "source": "accueil",
+      "target": "parcoursup"
+    },
+    {
+      "source": "accueil",
+      "target": "feynman"
+    },
+    {
+      "source": "arithmetique",
+      "target": "congruences"
+    },
+    {
+      "source": "arithmetique",
+      "target": "recurrence"
+    },
+    {
+      "source": "arithmetique",
+      "target": "crypto"
+    },
+    {
+      "source": "bac",
+      "target": "repetition"
+    },
+    {
+      "source": "bac",
+      "target": "parcoursup"
+    },
+    {
+      "source": "bac",
+      "target": "grandoral"
+    },
+    {
+      "source": "chomage",
+      "target": "marche"
+    },
+    {
+      "source": "chomage",
+      "target": "croissance"
+    },
+    {
+      "source": "commerce",
+      "target": "marche"
+    },
+    {
+      "source": "commerce",
+      "target": "croissance"
+    },
+    {
+      "source": "complexes",
+      "target": "geometrie"
+    },
+    {
+      "source": "complexes",
+      "target": "exp"
+    },
+    {
+      "source": "complexes",
+      "target": "polynomes"
+    },
+    {
+      "source": "congruences",
+      "target": "crypto"
+    },
+    {
+      "source": "continuite",
+      "target": "limites"
+    },
+    {
+      "source": "continuite",
+      "target": "python"
+    },
+    {
+      "source": "convexite",
+      "target": "derivation"
+    },
+    {
+      "source": "convexite",
+      "target": "fonctions"
+    },
+    {
+      "source": "croissance",
+      "target": "exp"
+    },
+    {
+      "source": "croissance",
+      "target": "pib"
+    },
+    {
+      "source": "croissance",
+      "target": "environnement"
+    },
+    {
+      "source": "crypto",
+      "target": "prepa"
+    },
+    {
+      "source": "denombrement",
+      "target": "probas"
+    },
+    {
+      "source": "denombrement",
+      "target": "arithmetique"
+    },
+    {
+      "source": "derivation",
+      "target": "fonctions"
+    },
+    {
+      "source": "derivation",
+      "target": "marginal"
+    },
+    {
+      "source": "ecoles",
+      "target": "prepa"
+    },
+    {
+      "source": "ecoles",
+      "target": "parcoursup"
+    },
+    {
+      "source": "environnement",
+      "target": "marche"
+    },
+    {
+      "source": "exp",
+      "target": "ln"
+    },
+    {
+      "source": "exp",
+      "target": "interets"
+    },
+    {
+      "source": "feynman",
+      "target": "repetition"
+    },
+    {
+      "source": "fonctions",
+      "target": "exp"
+    },
+    {
+      "source": "fonctions",
+      "target": "ln"
+    },
+    {
+      "source": "geometrie",
+      "target": "matrices"
+    },
+    {
+      "source": "grandoral",
+      "target": "inegalites"
+    },
+    {
+      "source": "grandoral",
+      "target": "markov"
+    },
+    {
+      "source": "graphes",
+      "target": "matrices"
+    },
+    {
+      "source": "graphes",
+      "target": "markov"
+    },
+    {
+      "source": "graphes",
+      "target": "python"
+    },
+    {
+      "source": "graphes",
+      "target": "accueil"
+    },
+    {
+      "source": "inegalites",
+      "target": "integrales"
+    },
+    {
+      "source": "inegalites",
+      "target": "pib"
+    },
+    {
+      "source": "inegalites",
+      "target": "mobilite"
+    },
+    {
+      "source": "integrales",
+      "target": "fonctions"
+    },
+    {
+      "source": "integrales",
+      "target": "probas"
+    },
+    {
+      "source": "interets",
+      "target": "suites"
+    },
+    {
+      "source": "licence",
+      "target": "parcoursup"
+    },
+    {
+      "source": "licence",
+      "target": "sondages"
+    },
+    {
+      "source": "limites",
+      "target": "fonctions"
+    },
+    {
+      "source": "limites",
+      "target": "exp"
+    },
+    {
+      "source": "marche",
+      "target": "marginal"
+    },
+    {
+      "source": "marche",
+      "target": "markov"
+    },
+    {
+      "source": "markov",
+      "target": "matrices"
+    },
+    {
+      "source": "markov",
+      "target": "probas"
+    },
+    {
+      "source": "mobilite",
+      "target": "sondages"
+    },
+    {
+      "source": "parcoursup",
+      "target": "prepa"
+    },
+    {
+      "source": "probas",
+      "target": "sondages"
+    },
+    {
+      "source": "python",
+      "target": "suites"
+    },
+    {
+      "source": "recurrence",
+      "target": "suites"
+    },
+    {
+      "source": "suites",
+      "target": "limites"
+    }
+  ]
+}
