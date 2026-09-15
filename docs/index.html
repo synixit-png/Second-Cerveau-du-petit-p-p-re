@@ -61,6 +61,10 @@ h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:cl
   box-shadow:0 0 12px -2px currentColor}
 .panel h2{font-family:"Unbounded",sans-serif;font-weight:600;font-size:1.25rem;margin:.7rem 0 .5rem;line-height:1.2}
 .panel .body{line-height:1.55;color:#CDD3F0}
+#pattachment img{max-width:100%;border-radius:14px;margin-top:12px;display:block;border:1px solid var(--line)}
+#pattachment a.filelink{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 14px;
+  border-radius:999px;border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:.88rem}
+#pattachment a.filelink:hover{border-color:var(--ink)}
 .panel .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
 .panel .links button{font:inherit;font-size:.85rem;padding:5px 10px;border-radius:999px;background:transparent;
   color:var(--ink);border:1px solid var(--line);cursor:pointer}
@@ -110,6 +114,7 @@ h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:cl
   <span class="tag" id="ptag"></span>
   <h2 id="ptitle"></h2>
   <div class="body" id="pbody"></div>
+  <div id="pattachment"></div>
   <div class="links" id="plinks"></div>
   <div class="links" id="pactions" hidden></div>
   <div class="progress" id="pprog" hidden><span></span></div>
@@ -122,6 +127,12 @@ h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:cl
   <input class="search" id="addTitle" type="text" placeholder="Titre de la note" style="margin-top:10px">
   <select class="search" id="addGroup" style="margin-top:10px"></select>
   <textarea class="search" id="addBody" rows="3" placeholder="Quelques phrases (optionnel)" style="margin-top:10px;resize:vertical;font-family:inherit"></textarea>
+  <input class="search" id="addLink" type="url" placeholder="Lien externe (optionnel) : https://…" style="margin-top:10px">
+  <label style="display:block;margin-top:10px;font-size:.85rem;color:var(--muted)">
+    Image ou fichier joint (optionnel)
+    <input id="addFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" style="display:block;margin-top:6px;font-size:.85rem;color:var(--ink)">
+  </label>
+  <div id="addFilePreview" style="margin-top:8px;font-size:.85rem;color:var(--muted)"></div>
   <button class="btn" id="addSubmit" style="margin-top:14px;width:100%">Créer la bulle</button>
 </aside>
 
@@ -320,6 +331,21 @@ function init(data){
     const tag = document.getElementById("ptag"); tag.textContent = g.label; tag.style.color = g.color;
     document.getElementById("ptitle").textContent = n.title;
     document.getElementById("pbody").textContent = n.body;
+    const attach = document.getElementById("pattachment"); attach.innerHTML = "";
+    if(n.image){
+      const img = document.createElement("img"); img.src = n.image; img.alt = n.title;
+      attach.appendChild(img);
+    }
+    if(n.file){
+      const a = document.createElement("a"); a.className = "filelink";
+      a.href = n.file.url; a.download = n.file.name; a.textContent = "📎 " + n.file.name;
+      attach.appendChild(a);
+    }
+    if(n.link){
+      const a = document.createElement("a"); a.className = "filelink";
+      a.href = n.link; a.target = "_blank"; a.rel = "noopener"; a.textContent = "🔗 Ouvrir le lien";
+      attach.appendChild(a);
+    }
     const box = document.getElementById("plinks"); box.innerHTML = "";
     neighbors(id).forEach(nid => {
       const b = document.createElement("button");
@@ -373,6 +399,58 @@ function init(data){
   }
   refreshDraftUI();
 
+  // ---------- Pièce jointe (image compressée ou fichier, en attente de soumission) ----------
+  const MAX_FILE_BYTES = 4 * 1024 * 1024; // 4 Mo, le stockage local du navigateur est limité
+  let pendingImage = null, pendingFile = null, keepExistingAttachment = true;
+  const addFileInput = document.getElementById("addFile");
+  const addFilePreview = document.getElementById("addFilePreview");
+
+  function resetAttachmentInputs(){
+    pendingImage = null; pendingFile = null; keepExistingAttachment = false;
+    addFileInput.value = "";
+    addFilePreview.innerHTML = "";
+  }
+  function downscaleImage(file, cb){
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 900;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width * scale; canvas.height = img.height * scale;
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      cb(canvas.toDataURL("image/jpeg", 0.75));
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  }
+  addFileInput.addEventListener("change", () => {
+    const file = addFileInput.files[0];
+    pendingImage = null; pendingFile = null; keepExistingAttachment = false;
+    addFilePreview.innerHTML = "";
+    if(!file) return;
+    if(file.size > MAX_FILE_BYTES){
+      addFilePreview.textContent = `Ce fichier fait ${(file.size/1024/1024).toFixed(1)} Mo, c'est trop pour être gardé dans le navigateur (max ~4 Mo).`;
+      addFileInput.value = "";
+      return;
+    }
+    if(file.type.startsWith("image/") && file.type !== "image/svg+xml"){
+      downscaleImage(file, dataUrl => {
+        pendingImage = dataUrl;
+        addFilePreview.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = dataUrl; img.style.maxWidth = "100%"; img.style.borderRadius = "10px";
+        addFilePreview.appendChild(img);
+      });
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingFile = { name: file.name, type: file.type, url: reader.result };
+        addFilePreview.textContent = "📎 " + file.name;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
   function openAddForm(parentId){
     stopTour(); closeNote();
     editingId = null;
@@ -381,6 +459,8 @@ function init(data){
     document.getElementById("addTitle").value = "";
     document.getElementById("addGroup").value = "maths";
     document.getElementById("addBody").value = "";
+    document.getElementById("addLink").value = "";
+    resetAttachmentInputs();
     document.getElementById("addSubmit").textContent = "Créer la bulle";
     addPanel.classList.add("open");
     document.getElementById("addTitle").focus();
@@ -393,6 +473,19 @@ function init(data){
     document.getElementById("addTitle").value = n.title;
     document.getElementById("addGroup").value = n.group;
     document.getElementById("addBody").value = n.body === "(brouillon, pas encore de description)" ? "" : n.body;
+    document.getElementById("addLink").value = n.link || "";
+    resetAttachmentInputs();
+    keepExistingAttachment = true;
+    addFilePreview.innerHTML = "";
+    if(n.image || n.file){
+      const info = document.createElement("div");
+      info.textContent = n.image ? "Image actuelle conservée (choisis un fichier pour la remplacer)." : `Fichier actuel : ${n.file.name} (conservé sauf remplacement)`;
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button"; removeBtn.textContent = "🗑️ Retirer la pièce jointe";
+      removeBtn.style.cssText = "margin-top:6px;font-size:.8rem;padding:4px 10px;border-radius:999px;background:transparent;color:var(--ink);border:1px solid var(--line);cursor:pointer";
+      removeBtn.onclick = () => { keepExistingAttachment = false; addFilePreview.innerHTML = ""; addFilePreview.textContent = "Pièce jointe retirée."; };
+      addFilePreview.append(info, document.createElement("br"), removeBtn);
+    }
     document.getElementById("addSubmit").textContent = "Enregistrer";
     addPanel.classList.add("open");
     document.getElementById("addTitle").focus();
@@ -417,17 +510,32 @@ function init(data){
     closeNote();
   }
 
+  function resolveAttachment(existing){
+    if(pendingImage) return { image: pendingImage, file: null };
+    if(pendingFile) return { image: null, file: pendingFile };
+    if(keepExistingAttachment && existing) return { image: existing.image || null, file: existing.file || null };
+    return { image: null, file: null };
+  }
+  function resolveLink(){
+    const raw = document.getElementById("addLink").value.trim();
+    if(!raw) return null;
+    if(!/^https?:\/\//i.test(raw)){ alert("Le lien doit commencer par http:// ou https://, il n'a pas été enregistré."); return null; }
+    return raw;
+  }
+
   document.getElementById("addSubmit").onclick = () => {
     const title = document.getElementById("addTitle").value.trim();
     if(!title) return;
     const body = document.getElementById("addBody").value.trim() || "(brouillon, pas encore de description)";
     const group = addGroupSelect.value;
+    const link = resolveLink();
 
     if(editingId){
       const n = byId[editingId];
-      n.title = title; n.group = group; n.body = body;
+      const { image, file } = resolveAttachment(n);
+      n.title = title; n.group = group; n.body = body; n.link = link; n.image = image; n.file = file;
       const d = drafts.nodes.find(x => x.id === editingId);
-      if(d){ d.title = title; d.group = group; d.body = body; }
+      if(d){ d.title = title; d.group = group; d.body = body; d.link = link; d.image = image; d.file = file; }
       saveDrafts();
       Graph.graphData({nodes, links});
       refreshTitles();
@@ -436,10 +544,11 @@ function init(data){
       return;
     }
 
+    const { image, file } = resolveAttachment(null);
     const id = uniqueId(slugify(title));
-    const node = {id, title, group, body, deg:0, draft:true};
+    const node = {id, title, group, body, link, image, file, deg:0, draft:true};
     byId[id] = node; nodes.push(node);
-    drafts.nodes.push({id, title, group, body});
+    drafts.nodes.push({id, title, group, body, link, image, file});
 
     if(addParentId){
       links.push({source: addParentId, target: id});
