@@ -101,6 +101,7 @@ h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:cl
   <h2 id="ptitle"></h2>
   <div class="body" id="pbody"></div>
   <div class="links" id="plinks"></div>
+  <div class="links" id="pactions" hidden></div>
   <div class="progress" id="pprog" hidden><span></span></div>
 </aside>
 
@@ -163,7 +164,7 @@ function init(data){
   }
   function saveDrafts(){ try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch {} }
   const drafts = loadDrafts();
-  drafts.nodes.forEach(n => { if(!byId[n.id]){ byId[n.id] = {...n, deg:0}; nodes.push(byId[n.id]); } });
+  drafts.nodes.forEach(n => { if(!byId[n.id]){ byId[n.id] = {...n, deg:0, draft:true}; nodes.push(byId[n.id]); } });
   drafts.links.forEach(l => links.push({...l}));
 
   links.forEach(l => { byId[l.source].deg++; byId[l.target].deg++; });
@@ -238,6 +239,17 @@ function init(data){
       b.onclick = () => { stopTour(); openNote(nid); };
       box.appendChild(b);
     });
+    const actions = document.getElementById("pactions"); actions.innerHTML = "";
+    if(n.draft){
+      const editBtn = document.createElement("button"); editBtn.textContent = "✏️ Modifier";
+      editBtn.onclick = () => openEditForm(id);
+      const delBtn = document.createElement("button"); delBtn.textContent = "🗑️ Supprimer";
+      delBtn.style.borderColor = "#FF6F9188"; delBtn.onclick = () => deleteDraft(id);
+      actions.append(editBtn, delBtn);
+      actions.hidden = false;
+    } else {
+      actions.hidden = true;
+    }
     panel.classList.add("open");
     const r = 1 + 90/Math.hypot(n.x||1, n.y||1, n.z||1);
     Graph.cameraPosition({x:(n.x||0)*r, y:(n.y||0)*r, z:(n.z||0)*r}, n, reduce ? 0 : 1600);
@@ -252,7 +264,7 @@ function init(data){
   addEventListener("keydown", e => { if(e.key === "Escape"){ stopTour(); closeNote(); if(addMode) closeAddForm(); } });
 
   // ---------- Mode ajout : cliquer une bulle crée une sous-bulle reliée, cliquer le vide crée une bulle libre ----------
-  let addMode = false, addParentId = null;
+  let addMode = false, addParentId = null, editingId = null;
   const addBtn = document.getElementById("addToggle");
   const addPanel = document.getElementById("addPanel");
   const addGroupSelect = document.getElementById("addGroup");
@@ -274,24 +286,69 @@ function init(data){
 
   function openAddForm(parentId){
     stopTour(); closeNote();
+    editingId = null;
     addParentId = parentId;
     document.getElementById("addParentTag").textContent = parentId ? `Reliée à : ${byId[parentId].title}` : "Nouvelle bulle libre";
     document.getElementById("addTitle").value = "";
+    document.getElementById("addGroup").value = "maths";
     document.getElementById("addBody").value = "";
+    document.getElementById("addSubmit").textContent = "Créer la bulle";
+    addPanel.classList.add("open");
+    document.getElementById("addTitle").focus();
+  }
+  function openEditForm(id){
+    stopTour(); closeNote();
+    const n = byId[id];
+    editingId = id; addParentId = null;
+    document.getElementById("addParentTag").textContent = "Modifier ta bulle";
+    document.getElementById("addTitle").value = n.title;
+    document.getElementById("addGroup").value = n.group;
+    document.getElementById("addBody").value = n.body === "(brouillon, pas encore de description)" ? "" : n.body;
+    document.getElementById("addSubmit").textContent = "Enregistrer";
     addPanel.classList.add("open");
     document.getElementById("addTitle").focus();
   }
   function closeAddForm(){ addPanel.classList.remove("open"); }
   document.getElementById("addClose").onclick = closeAddForm;
 
+  function deleteDraft(id){
+    const n = byId[id];
+    if(!confirm(`Supprimer la bulle "${n.title}" ? Cette action est immédiate (pense à Exporter avant si tu veux la garder).`)) return;
+    delete byId[id];
+    const ni = nodes.findIndex(x => x.id === id); if(ni >= 0) nodes.splice(ni, 1);
+    for(let i = links.length - 1; i >= 0; i--){
+      if(sid(links[i].source) === id || sid(links[i].target) === id) links.splice(i, 1);
+    }
+    drafts.nodes = drafts.nodes.filter(x => x.id !== id);
+    drafts.links = drafts.links.filter(l => l.source !== id && l.target !== id);
+    saveDrafts();
+    Graph.graphData({nodes, links});
+    refreshDraftUI();
+    refreshTitles();
+    closeNote();
+  }
+
   document.getElementById("addSubmit").onclick = () => {
     const title = document.getElementById("addTitle").value.trim();
     if(!title) return;
     const body = document.getElementById("addBody").value.trim() || "(brouillon, pas encore de description)";
     const group = addGroupSelect.value;
-    const id = uniqueId(slugify(title));
 
-    const node = {id, title, group, body, deg:0};
+    if(editingId){
+      const n = byId[editingId];
+      n.title = title; n.group = group; n.body = body;
+      const d = drafts.nodes.find(x => x.id === editingId);
+      if(d){ d.title = title; d.group = group; d.body = body; }
+      saveDrafts();
+      Graph.graphData({nodes, links});
+      refreshTitles();
+      editingId = null;
+      closeAddForm();
+      return;
+    }
+
+    const id = uniqueId(slugify(title));
+    const node = {id, title, group, body, deg:0, draft:true};
     byId[id] = node; nodes.push(node);
     drafts.nodes.push({id, title, group, body});
 
@@ -303,6 +360,7 @@ function init(data){
     saveDrafts();
     Graph.graphData({nodes, links});
     refreshDraftUI();
+    refreshTitles();
     closeAddForm();
   };
 
@@ -371,7 +429,11 @@ function init(data){
 
   // ---------- Recherche ----------
   const dl = document.getElementById("titles");
-  nodes.forEach(n => { const o = document.createElement("option"); o.value = n.title; dl.appendChild(o); });
+  function refreshTitles(){
+    dl.innerHTML = "";
+    nodes.forEach(n => { const o = document.createElement("option"); o.value = n.title; dl.appendChild(o); });
+  }
+  refreshTitles();
   document.getElementById("search").addEventListener("change", e => {
     const q = e.target.value.trim().toLowerCase();
     const n = nodes.find(n => n.title.toLowerCase() === q) || nodes.find(n => n.title.toLowerCase().includes(q));
