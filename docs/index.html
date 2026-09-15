@@ -39,7 +39,7 @@ h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:cl
 .chip:focus-visible,.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .controls{position:fixed;right:24px;bottom:22px;z-index:3;display:flex;gap:8px}
 .btn{padding:11px 18px;border-radius:999px;border:0;font:inherit;font-weight:700;cursor:pointer;
-  background:var(--ink);color:var(--space)}
+  background:var(--ink);color:var(--space);text-decoration:none;display:inline-block}
 .btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--line)}
 .panel{position:fixed;top:20px;right:20px;z-index:4;width:min(360px,calc(100vw - 40px));max-height:calc(100vh - 110px);
   overflow:auto;padding:22px 22px 18px;border-radius:22px;background:var(--glass);border:1px solid var(--line);
@@ -81,6 +81,7 @@ h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:cl
 <nav class="legend" id="legend" aria-label="Filtrer par matière"></nav>
 
 <div class="controls">
+  <a class="btn ghost" href="https://github.com/synixit-png/Second-Cerveau-du-petit-p-p-re/issues/new?template=nouvelle-note.yml" target="_blank" rel="noopener">💡 Proposer une note</a>
   <button class="btn ghost" id="spin" aria-pressed="true">Pause rotation</button>
   <button class="btn" id="tour">Lancer le voyage</button>
 </div>
