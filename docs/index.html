@@ -125,6 +125,30 @@ const GROUPS = {
   orient:  {label:"Orientation",  color:"#5CE1B8"},
   methode: {label:"Méthodes",     color:"#FF6F91"}
 };
+const HUB_ID = "accueil";
+const HUB_COLOR = "#FFFFFF";
+
+// Un point d'ancrage par matière, réparti sur une sphère autour du centre
+// (pas juste sur un cercle plat) : chaque matière est tirée vers son propre
+// secteur en 3D, pour rester dissociée des autres quel que soit l'angle de
+// vue de la caméra (qui tourne, elle, dans le plan horizontal).
+const CLUSTER_RADIUS = 260;
+const GROUP_ANCHORS = {};
+{
+  const keys = Object.keys(GROUPS);
+  const n = keys.length;
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  keys.forEach((k, i) => {
+    const y = n === 1 ? 0 : 1 - (i / (n - 1)) * 2; // de 1 à -1
+    const r = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = goldenAngle * i;
+    GROUP_ANCHORS[k] = {
+      x: CLUSTER_RADIUS * r * Math.cos(theta),
+      y: CLUSTER_RADIUS * y * 0.6,
+      z: CLUSTER_RADIUS * r * Math.sin(theta)
+    };
+  });
+}
 
 // ---------- Étoiles de fond ----------
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -181,12 +205,13 @@ function init(data){
     .backgroundColor("rgba(0,0,0,0)")
     .graphData({nodes, links})
     .nodeLabel(n => `<b>${n.title}</b>`)
-    .nodeVal(n => 2 + n.deg*1.6)
-    .nodeResolution(20)
+    .nodeVal(n => n.id === HUB_ID ? 320 : 2 + n.deg*1.6)
+    .nodeResolution(24)
     .nodeOpacity(.95)
     .nodeColor(n => {
       if(hidden.has(n.group)) return "rgba(0,0,0,0)";
       if(hoverSet.size && !hoverSet.has(n.id)) return "#39405e";
+      if(n.id === HUB_ID) return HUB_COLOR;
       return GROUPS[n.group].color;
     })
     .nodeVisibility(n => !hidden.has(n.group))
@@ -206,6 +231,30 @@ function init(data){
 
   Graph.d3Force("charge").strength(-90);
   Graph.cameraPosition({z: 320});
+
+  // "Mon second cerveau" reste toujours pile au centre, immobile.
+  const hub = byId[HUB_ID];
+  if(hub){ hub.fx = 0; hub.fy = 0; hub.fz = 0; }
+
+  // Force additionnelle : tire chaque bulle (sauf le centre) vers le secteur
+  // de sa matière, pour que les groupes restent visuellement séparés au lieu
+  // de se mélanger au centre avec les autres.
+  Graph.d3Force("cluster", (() => {
+    let clusterNodes = [];
+    function force(alpha){
+      const k = alpha * 0.5;
+      clusterNodes.forEach(n => {
+        if(n.id === HUB_ID) return;
+        const anchor = GROUP_ANCHORS[n.group];
+        if(!anchor) return;
+        n.vx += (anchor.x - n.x) * k;
+        n.vy += (anchor.y - n.y) * k;
+        n.vz += (anchor.z - n.z) * k;
+      });
+    }
+    force.initialize = ns => { clusterNodes = ns; };
+    return force;
+  })());
 
   function highlight(id){
     hoverSet = id ? new Set([id, ...neighbors(id)]) : new Set();
