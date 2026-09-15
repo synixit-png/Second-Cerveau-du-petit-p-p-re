@@ -18,37 +18,47 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--space);color:var
   font-family:"Atkinson Hyperlegible",system-ui,sans-serif}
 body{
   background:
-    radial-gradient(ellipse at 20% 30%, rgba(122,162,255,.14), transparent 55%),
-    radial-gradient(ellipse at 80% 70%, rgba(185,140,255,.12), transparent 50%),
+    radial-gradient(ellipse at 20% 30%, rgba(122,162,255,.16), transparent 55%),
+    radial-gradient(ellipse at 80% 70%, rgba(185,140,255,.14), transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(92,225,184,.08), transparent 60%),
     var(--space);
 }
 #stars{position:fixed;inset:0;z-index:0}
 #graph{position:fixed;inset:0;z-index:1}
 h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:clamp(1.3rem,3.2vw,2.2rem);
-  letter-spacing:-.02em;margin:0;line-height:1.05}
+  letter-spacing:-.02em;margin:0;line-height:1.05;color:#fff;
+  text-shadow:0 0 12px rgba(122,162,255,.7), 0 0 32px rgba(185,140,255,.35)}
 .top{position:fixed;top:20px;left:24px;z-index:3;max-width:min(420px,80vw);pointer-events:none}
 .top p{margin:.5rem 0 0;color:var(--muted);font-size:.95rem}
 .search{pointer-events:auto;margin-top:14px;width:100%;padding:10px 14px;border-radius:999px;border:1px solid var(--line);
-  background:var(--glass);color:var(--ink);font:inherit;backdrop-filter:blur(8px)}
-.search:focus{outline:2px solid var(--maths);outline-offset:2px}
+  background:var(--glass);color:var(--ink);font:inherit;backdrop-filter:blur(8px);transition:box-shadow .25s,border-color .25s}
+.search:focus{outline:none;border-color:var(--maths);box-shadow:0 0 0 3px rgba(122,162,255,.25),0 0 20px rgba(122,162,255,.35)}
 .legend{position:fixed;left:24px;bottom:22px;z-index:3;display:flex;flex-wrap:wrap;gap:8px;max-width:calc(100vw - 48px)}
 .chip{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);
-  background:var(--glass);color:var(--ink);font:inherit;font-size:.88rem;cursor:pointer;backdrop-filter:blur(8px)}
-.chip i{width:10px;height:10px;border-radius:50%;box-shadow:0 0 10px currentColor}
-.chip[aria-pressed="false"]{opacity:.38}
+  background:var(--glass);color:var(--ink);font:inherit;font-size:.88rem;cursor:pointer;backdrop-filter:blur(8px);
+  transition:opacity .25s,box-shadow .25s,transform .15s}
+.chip i{width:10px;height:10px;border-radius:50%;box-shadow:0 0 10px 2px currentColor}
+.chip[aria-pressed="false"]{opacity:.34}
+.chip:hover{transform:translateY(-1px)}
+.chip[aria-pressed="true"]:hover{box-shadow:0 0 16px rgba(232,236,255,.18)}
 .chip:focus-visible,.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .controls{position:fixed;right:24px;bottom:22px;z-index:3;display:flex;gap:8px}
 .draftbar{position:fixed;right:24px;bottom:78px;z-index:3;display:flex;gap:8px;align-items:center}
 .draftbar .tag{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--glass);
   backdrop-filter:blur(8px);font-size:.88rem}
 .btn{padding:11px 18px;border-radius:999px;border:0;font:inherit;font-weight:700;cursor:pointer;
-  background:var(--ink);color:var(--space);text-decoration:none;display:inline-block}
+  background:var(--ink);color:var(--space);text-decoration:none;display:inline-block;
+  transition:transform .15s,box-shadow .25s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(232,236,255,.25)}
 .btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{box-shadow:0 4px 18px rgba(122,162,255,.2)}
 .panel{position:fixed;top:20px;right:20px;z-index:4;width:min(360px,calc(100vw - 40px));max-height:calc(100vh - 110px);
   overflow:auto;padding:22px 22px 18px;border-radius:22px;background:var(--glass);border:1px solid var(--line);
-  backdrop-filter:blur(14px);transform:translateX(calc(100% + 40px));transition:transform .45s cubic-bezier(.2,.8,.2,1)}
-.panel.open{transform:none}
-.panel .tag{display:inline-block;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid currentColor}
+  backdrop-filter:blur(14px);transform:translateX(calc(100% + 40px));transition:transform .45s cubic-bezier(.2,.8,.2,1);
+  box-shadow:0 0 0 rgba(0,0,0,0)}
+.panel.open{transform:none;box-shadow:0 10px 60px rgba(122,162,255,.12)}
+.panel .tag{display:inline-block;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid currentColor;
+  box-shadow:0 0 12px -2px currentColor}
 .panel h2{font-family:"Unbounded",sans-serif;font-weight:600;font-size:1.25rem;margin:.7rem 0 .5rem;line-height:1.2}
 .panel .body{line-height:1.55;color:#CDD3F0}
 .panel .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
@@ -153,14 +163,35 @@ const GROUP_ANCHORS = {};
 // ---------- Étoiles de fond ----------
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const sc = document.getElementById("stars"), sx = sc.getContext("2d");
+const STAR_TINTS = ["#ffffff","#bfe0ff","#d8c8ff","#ffe9c2"];
 let stars = [];
 function sizeStars(){
   sc.width = innerWidth*devicePixelRatio; sc.height = innerHeight*devicePixelRatio;
-  stars = Array.from({length:260},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.3*devicePixelRatio,p:Math.random()*6}));
+  stars = Array.from({length:320},()=>{
+    const flare = Math.random() < 0.06;
+    return {
+      x: Math.random()*sc.width, y: Math.random()*sc.height,
+      r: (flare ? 1.6 + Math.random()*1.6 : Math.random()*1.2) * devicePixelRatio,
+      p: Math.random()*6,
+      speed: 500 + Math.random()*900,
+      color: STAR_TINTS[(Math.random()*STAR_TINTS.length)|0],
+      flare
+    };
+  });
 }
 function drawStars(t){
   sx.clearRect(0,0,sc.width,sc.height);
-  for(const s of stars){ sx.globalAlpha = .35 + .35*Math.sin(t/900 + s.p); sx.beginPath(); sx.arc(s.x,s.y,s.r,0,7); sx.fillStyle="#fff"; sx.fill(); }
+  for(const s of stars){
+    const twinkle = .3 + .5*Math.max(0, Math.sin(t/s.speed + s.p));
+    sx.globalAlpha = twinkle;
+    if(s.flare){
+      sx.shadowBlur = 8*devicePixelRatio; sx.shadowColor = s.color;
+    } else {
+      sx.shadowBlur = 0;
+    }
+    sx.beginPath(); sx.arc(s.x, s.y, s.r, 0, 7); sx.fillStyle = s.color; sx.fill();
+  }
+  sx.shadowBlur = 0;
   if(!reduce) requestAnimationFrame(drawStars);
 }
 sizeStars(); requestAnimationFrame(drawStars); addEventListener("resize", sizeStars);
@@ -218,12 +249,12 @@ function init(data){
     .linkVisibility(l => !hidden.has(resolve(l.source).group) && !hidden.has(resolve(l.target).group))
     .linkColor(l => { const s = resolve(l.source).id, t = resolve(l.target).id;
       return hoverSet.size && hoverSet.has(s) && hoverSet.has(t) && (s===focus||t===focus) ? "#ffffff" : "#6f78b0"; })
-    .linkOpacity(.35)
+    .linkOpacity(.4)
     .linkWidth(l => { const s = resolve(l.source).id, t = resolve(l.target).id;
-      return focus && (s===focus||t===focus) ? 1.4 : .4; })
-    .linkDirectionalParticles(2)
-    .linkDirectionalParticleWidth(1.3)
-    .linkDirectionalParticleSpeed(.004)
+      return focus && (s===focus||t===focus) ? 1.8 : .5; })
+    .linkDirectionalParticles(3)
+    .linkDirectionalParticleWidth(2.2)
+    .linkDirectionalParticleSpeed(.006)
     .linkDirectionalParticleColor(l => GROUPS[resolve(l.source).group].color)
     .onNodeHover(n => { el.style.cursor = n ? "pointer" : ""; if(!focus) highlight(n ? n.id : null); })
     .onNodeClick(n => { stopTour(); openNote(n.id); })
@@ -231,6 +262,14 @@ function init(data){
 
   Graph.d3Force("charge").strength(-90);
   Graph.cameraPosition({z: 320});
+
+  // Scène plus lumineuse et plus saturée : on ajuste les lumières que la
+  // librairie a déjà créées (pas de nouvel objet three.js, donc pas de
+  // risque de conflit avec l'instance three.js interne du moteur).
+  Graph.lights().forEach(light => {
+    if(light.type === "AmbientLight") light.intensity *= 1.6;
+    if(light.type === "DirectionalLight") light.intensity *= 1.15;
+  });
 
   // "Mon second cerveau" reste toujours pile au centre, immobile.
   const hub = byId[HUB_ID];
