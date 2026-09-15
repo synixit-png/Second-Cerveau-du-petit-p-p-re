@@ -7,6 +7,10 @@ Chaque note wiki/<id>.md a un frontmatter minimal :
     title: Titre de la note
     group: maths
     links: [autre-note, encore-une-autre]
+    link: https://exemple.com (optionnel)
+    image: files/mon-id.jpg (optionnel, chemin relatif à docs/)
+    file: files/mon-id.pdf (optionnel, chemin relatif à docs/)
+    fileName: mon-cours.pdf (optionnel, nom affiché pour "file")
     ---
 
     Corps de la note.
@@ -49,6 +53,12 @@ def parse_note(path: Path) -> tuple[dict, list[str]]:
         "group": fields.get("group", "methode"),
         "body": body,
     }
+    if fields.get("link"):
+        note["link"] = fields["link"]
+    if fields.get("image"):
+        note["image"] = fields["image"]
+    if fields.get("file"):
+        note["file"] = {"name": fields.get("fileName", fields["file"]), "url": fields["file"]}
     return note, links
 
 
@@ -59,6 +69,8 @@ def main() -> None:
     notes_by_id: dict[str, dict] = {}
     links_by_id: dict[str, list[str]] = {}
     for path in sorted(WIKI_DIR.glob("*.md")):
+        if path.name == "README.md":
+            continue
         note, links = parse_note(path)
         notes_by_id[note["id"]] = note
         links_by_id[note["id"]] = links

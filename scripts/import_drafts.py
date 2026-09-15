@@ -2,14 +2,32 @@
 """Importe un export de brouillons (le fichier mes-notes.json téléchargé via
 le bouton "Exporter" du site) dans wiki/*.md.
 
+Les images et fichiers joints (envoyés en base64 dans l'export) sont
+décodés et écrits dans docs/files/, puisque seul le dossier docs/ est
+publié par GitHub Pages.
+
 Usage : python3 scripts/import_drafts.py chemin/vers/mes-notes.json
 """
+import base64
 import json
+import mimetypes
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 WIKI_DIR = ROOT / "wiki"
+FILES_DIR = ROOT / "docs" / "files"
+
+
+def decode_data_uri(data_uri: str) -> bytes:
+    _, b64data = data_uri.split(",", 1)
+    return base64.b64decode(b64data)
+
+
+def guess_ext(data_uri: str, fallback_name: str = "") -> str:
+    mime = data_uri.split(";")[0].removeprefix("data:")
+    ext = mimetypes.guess_extension(mime) or Path(fallback_name).suffix or ""
+    return ".jpg" if ext == ".jpe" else ext
 
 
 def main() -> None:
@@ -32,11 +50,34 @@ def main() -> None:
             continue
 
         links = sorted(links_by_id.get(note_id, []))
+        extra_lines = []
+
+        if note.get("link"):
+            extra_lines.append(f"link: {note['link']}")
+
+        if note.get("image"):
+            ext = guess_ext(note["image"]) or ".jpg"
+            FILES_DIR.mkdir(parents=True, exist_ok=True)
+            rel_path = f"files/{note_id}{ext}"
+            (ROOT / "docs" / rel_path).write_bytes(decode_data_uri(note["image"]))
+            extra_lines.append(f"image: {rel_path}")
+
+        if note.get("file"):
+            file_name = note["file"].get("name", "fichier")
+            ext = Path(file_name).suffix or guess_ext(note["file"]["url"])
+            FILES_DIR.mkdir(parents=True, exist_ok=True)
+            rel_path = f"files/{note_id}{ext}"
+            (ROOT / "docs" / rel_path).write_bytes(decode_data_uri(note["file"]["url"]))
+            extra_lines.append(f"file: {rel_path}")
+            extra_lines.append(f"fileName: {file_name}")
+
+        extra = ("\n".join(extra_lines) + "\n") if extra_lines else ""
         content = (
             "---\n"
             f"title: {note['title']}\n"
             f"group: {note['group']}\n"
             f"links: [{', '.join(links)}]\n"
+            f"{extra}"
             "---\n\n"
             f"{note['body']}\n"
         )

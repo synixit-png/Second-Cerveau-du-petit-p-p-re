@@ -13,7 +13,9 @@ visualisées comme un graphe 3D navigable.
 - `scripts/generate_graph.py` — parse `wiki/*.md` et régénère
   `docs/graph.json` (nœuds + liens).
 - `docs/` — page GitHub Pages : `index.html` (le graphe 3D) charge
-  `graph.json` au runtime. C'est tout ce qu'il faut publier.
+  `graph.json` au runtime. `docs/files/` contient les images/fichiers
+  joints aux notes (généré par `scripts/import_drafts.py`, jamais à la
+  main). C'est tout ce qu'il faut publier.
 
 ## Workflow attendu de Claude
 
@@ -59,9 +61,12 @@ Deux canaux, aucun ne demande de toucher au code :
    ```
 
    crée les fichiers `wiki/*.md` correspondants (ignore ceux dont l'id
-   existe déjà). Relis-les, ajuste `group`/`links`/le corps si besoin
-   (le script se contente de convertir tel quel), puis régénère le graphe
-   comme d'habitude.
+   existe déjà). Une note peut aussi porter un lien externe et une image
+   ou un fichier joint (upload direct sur la page, max ~4 Mo côté
+   navigateur) : le script les décode et les écrit dans `docs/files/`
+   automatiquement. Relis les notes créées, ajuste `group`/`links`/le
+   corps si besoin (le script se contente de convertir tel quel), puis
+   régénère le graphe comme d'habitude.
 
 2. **Issue GitHub** (`.github/ISSUE_TEMPLATE/nouvelle-note.yml`, formulaire
    sujet/matière/lien/description) — plus adapté à toi qu'à quelqu'un qui ne
