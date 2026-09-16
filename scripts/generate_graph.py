@@ -25,6 +25,15 @@ ROOT = Path(__file__).resolve().parent.parent
 WIKI_DIR = ROOT / "wiki"
 OUTPUT = ROOT / "docs" / "graph.json"
 
+HUB_ID = "accueil"
+GROUPS = {
+    "maths":   {"label": "Maths",        "color": "#7AA2FF"},
+    "expert":  {"label": "Maths expert", "color": "#B98CFF"},
+    "ses":     {"label": "SES",          "color": "#FFB35C"},
+    "orient":  {"label": "Orientation",  "color": "#5CE1B8"},
+    "methode": {"label": "Memecoin",     "color": "#FF6F91"},
+}
+
 
 def parse_note(path: Path) -> tuple[dict, list[str]]:
     text = path.read_text(encoding="utf-8")
@@ -92,7 +101,10 @@ def main() -> None:
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(
-        json.dumps({"nodes": nodes, "links": links}, ensure_ascii=False, indent=2),
+        json.dumps(
+            {"nodes": nodes, "links": links, "groups": GROUPS, "hub": HUB_ID},
+            ensure_ascii=False, indent=2,
+        ),
         encoding="utf-8",
     )
     print(f"{len(nodes)} notes, {len(links)} liens -> {OUTPUT.relative_to(ROOT)}")

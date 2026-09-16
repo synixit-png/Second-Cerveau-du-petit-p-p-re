@@ -522,5 +522,28 @@
       "source": "suites",
       "target": "limites"
     }
-  ]
+  ],
+  "groups": {
+    "maths": {
+      "label": "Maths",
+      "color": "#7AA2FF"
+    },
+    "expert": {
+      "label": "Maths expert",
+      "color": "#B98CFF"
+    },
+    "ses": {
+      "label": "SES",
+      "color": "#FFB35C"
+    },
+    "orient": {
+      "label": "Orientation",
+      "color": "#5CE1B8"
+    },
+    "methode": {
+      "label": "Memecoin",
+      "color": "#FF6F91"
+    }
+  },
+  "hub": "accueil"
 }

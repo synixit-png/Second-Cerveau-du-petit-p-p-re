@@ -140,36 +140,38 @@ h1{font-family:"Unbounded","Arial Black",sans-serif;font-weight:600;font-size:cl
 <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.3/dist/3d-force-graph.min.js"></script>
 <script>
 // ---------- Groupes / couleurs (métadonnées d'affichage, pas de contenu) ----------
-const GROUPS = {
+// Repli par défaut si les données ne fournissent pas leur propre "groups"
+// (ancien graph.json sans ce champ, ou données incomplètes).
+const DEFAULT_GROUPS = {
   maths:   {label:"Maths",        color:"#7AA2FF"},
   expert:  {label:"Maths expert", color:"#B98CFF"},
   ses:     {label:"SES",          color:"#FFB35C"},
   orient:  {label:"Orientation",  color:"#5CE1B8"},
   methode: {label:"Memecoin",     color:"#FF6F91"}
 };
-const HUB_ID = "accueil";
 const HUB_COLOR = "#FFFFFF";
+const CLUSTER_RADIUS = 260;
 
 // Un point d'ancrage par matière, réparti sur une sphère autour du centre
 // (pas juste sur un cercle plat) : chaque matière est tirée vers son propre
 // secteur en 3D, pour rester dissociée des autres quel que soit l'angle de
 // vue de la caméra (qui tourne, elle, dans le plan horizontal).
-const CLUSTER_RADIUS = 260;
-const GROUP_ANCHORS = {};
-{
-  const keys = Object.keys(GROUPS);
+function buildGroupAnchors(groups){
+  const anchors = {};
+  const keys = Object.keys(groups);
   const n = keys.length;
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
   keys.forEach((k, i) => {
     const y = n === 1 ? 0 : 1 - (i / (n - 1)) * 2; // de 1 à -1
     const r = Math.sqrt(Math.max(0, 1 - y * y));
     const theta = goldenAngle * i;
-    GROUP_ANCHORS[k] = {
+    anchors[k] = {
       x: CLUSTER_RADIUS * r * Math.cos(theta),
       y: CLUSTER_RADIUS * y * 0.6,
       z: CLUSTER_RADIUS * r * Math.sin(theta)
     };
   });
+  return anchors;
 }
 
 // ---------- Étoiles de fond ----------
@@ -219,6 +221,12 @@ fetch("graph.json")
 function init(data){
   document.getElementById("loading").remove();
 
+  // GROUPS/HUB_ID viennent des données (permet d'afficher n'importe quel
+  // vault, avec ses propres matières et sa propre note centrale — pas
+  // seulement notre wiki maison) ; repli sur les valeurs par défaut sinon.
+  const GROUPS = data.groups || DEFAULT_GROUPS;
+  const GROUP_ANCHORS = buildGroupAnchors(GROUPS);
+
   // ---------- Brouillons : bulles ajoutées/supprimées localement, jamais envoyées nulle part ----------
   const DRAFT_KEY = "secondCerveau.drafts";
   function loadDrafts(){
@@ -237,6 +245,8 @@ function init(data){
 
   drafts.nodes.forEach(n => { if(!byId[n.id]){ byId[n.id] = {...n, deg:0, draft:true}; nodes.push(byId[n.id]); } });
   drafts.links.forEach(l => links.push({...l}));
+
+  const HUB_ID = data.hub || (byId["accueil"] ? "accueil" : null);
 
   links.forEach(l => { byId[l.source].deg++; byId[l.target].deg++; });
   const sid = x => typeof x === "object" ? x.id : x;
@@ -619,7 +629,7 @@ function init(data){
     requestAnimationFrame(() => { bar.style.transition = `width ${STEP}ms linear`; bar.style.width = "100%"; });
   }
   function startTour(){
-    const start = byId["accueil"] ? "accueil" : nodes[0].id;
+    const start = byId[HUB_ID] ? HUB_ID : nodes[0].id;
     const order = [], stack = [start], vis = new Set();
     while(stack.length){ const id = stack.pop(); if(vis.has(id)) continue; vis.add(id); order.push(id); neighbors(id).reverse().forEach(n => stack.push(n)); }
     tourOrder = order; tourIdx = 0;
