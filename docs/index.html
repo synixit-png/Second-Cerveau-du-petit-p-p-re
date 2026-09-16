@@ -574,10 +574,13 @@ function init(data){
     byId[id] = node; nodes.push(node);
     drafts.nodes.push({id, title, group, body, link, image, file});
 
-    if(addParentId){
-      links.push({source: addParentId, target: id});
-      drafts.links.push({source: addParentId, target: id});
-      byId[addParentId].deg++; node.deg++;
+    // Une bulle libre reste quand même reliée au centre : jamais d'îlot
+    // flottant, toujours au moins un trait vers "Mon second cerveau".
+    const parentId = addParentId || (byId[HUB_ID] && id !== HUB_ID ? HUB_ID : null);
+    if(parentId){
+      links.push({source: parentId, target: id});
+      drafts.links.push({source: parentId, target: id});
+      byId[parentId].deg++; node.deg++;
     }
     saveDrafts();
     Graph.graphData({nodes, links});
@@ -654,6 +657,7 @@ function init(data){
   document.getElementById("search").addEventListener("change", e => {
     const q = e.target.value.trim().toLowerCase();
     const n = nodes.find(n => n.title.toLowerCase() === q) || nodes.find(n => n.title.toLowerCase().includes(q));
+    e.target.blur();
     if(n){ stopTour(); openNote(n.id); }
   });
 
