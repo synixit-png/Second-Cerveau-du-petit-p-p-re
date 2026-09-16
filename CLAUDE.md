@@ -16,6 +16,23 @@ visualisées comme un graphe 3D navigable.
   `graph.json` au runtime. `docs/files/` contient les images/fichiers
   joints aux notes (généré par `scripts/import_drafts.py`, jamais à la
   main). C'est tout ce qu'il faut publier.
+- `docs/index.html` est générique : `GROUPS`/`HUB_ID` viennent des données
+  (`data.groups`/`data.hub`), avec les valeurs actuelles en repli si absentes.
+  Ça permet de réutiliser la même page pour un vault Obsidian externe (voir
+  `scripts/obsidian_to_graph.py`) sans dupliquer le HTML/CSS/JS.
+
+## Visualiser un vault Obsidian externe (pas notre wiki/)
+
+`scripts/obsidian_to_graph.py <vault> [dossier-sortie]` convertit N'IMPORTE
+QUEL vault Obsidian (pas seulement wiki/ de ce dépôt) en page 3D autonome.
+Sans dépendance à installer. Détecte les matières depuis les tags/dossiers,
+suit les `[[wikilinks]]`, récupère images et fichiers joints, choisit une
+note centrale (Home/Index/Start/MOC, ou la plus reliée sinon). Produit un
+dossier avec `vault-graph.html` (données intégrées, s'ouvre en double-clic,
+aucun serveur requis) + `graph.json` + `files/`. Cette page n'est jamais
+publiée sur `docs/` — c'est un usage local pour quelqu'un qui a son propre
+vault et veut juste une belle visualisation, pas une contribution au wiki
+partagé de ce dépôt.
 
 ## Workflow attendu de Claude
 
